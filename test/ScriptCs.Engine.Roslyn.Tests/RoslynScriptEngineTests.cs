@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reflection;
 using Common.Logging;
 using Moq;
@@ -21,7 +22,7 @@ namespace ScriptCs.Tests
             [Theory, ScriptCsAutoData]
             public void ShouldAddReferenceToCore()
             {
-                var engine = new RoslynTestScriptEngine(new Mock<IScriptHostFactory>().Object, new Mock<ILog>().Object);
+                var engine = new RoslynTestScriptEngine(new Mock<IScriptHostFactory>().Object, new Mock<ILog>().Object, new Mock<IFileSystem>().Object);
                 engine.Engine.GetReferences().Where(x => x.Display.EndsWith("ScriptCs.Core.dll")).Count().ShouldEqual(1);
             }
         }
@@ -37,9 +38,11 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "var a = 0;";
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
 
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(),mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q,mockFileSystem)));
 
                 scriptPack.Setup(p => p.Initialize(It.IsAny<IScriptPackSession>()));
                 scriptPack.Setup(p => p.GetContext()).Returns((IScriptPackContext)null);
@@ -48,7 +51,7 @@ namespace ScriptCs.Tests
                 engine.Execute(Code, new string[0], new AssemblyReferences(), Enumerable.Empty<string>(), scriptPackSession);
 
                 // Assert
-                scriptHostFactory.Verify(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()));
+                scriptHostFactory.Verify(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(),mockFileSystem));
             }
 
             [Theory, ScriptCsAutoData]
@@ -59,9 +62,10 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "var a = 0;";
-
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(), mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q,mockFileSystem)));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
                 scriptPackSession.State[RoslynScriptEngine.SessionKey] = session;
@@ -81,9 +85,10 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "var a = 0;";
-
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x=>x.CurrentDirectory).Returns(Environment.CurrentDirectory);
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(), mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q,mockFileSystem)));
 
                 // Act
                 engine.Execute(Code, new string[0], new AssemblyReferences(), Enumerable.Empty<string>(), scriptPackSession);
@@ -100,9 +105,11 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "var a = 0;";
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
 
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(),mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q, mockFileSystem)));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
                 scriptPackSession.State[RoslynScriptEngine.SessionKey] = session;
@@ -124,9 +131,10 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 var code = string.Empty;
-
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(),mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q,mockFileSystem)));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
                 scriptPackSession.State[RoslynScriptEngine.SessionKey] = session;
@@ -148,9 +156,11 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "this shold not compile";
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
 
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(), It.IsAny<IFileSystem>()))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q,mockFileSystem)));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
                 scriptPackSession.State[RoslynScriptEngine.SessionKey] = session;
@@ -172,9 +182,11 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "var theNumber = 42; //this should compile";
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
 
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(),mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q,mockFileSystem)));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
                 scriptPackSession.State[RoslynScriptEngine.SessionKey] = session;
@@ -196,9 +208,11 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "throw new System.Exception(); //this should throw an Exception";
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
 
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(),mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q, mockFileSystem)));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
                 scriptPackSession.State[RoslynScriptEngine.SessionKey] = session;
@@ -220,9 +234,11 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "var theNumber = 42; //this should not throw an Exception";
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
 
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(), mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q,mockFileSystem)));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
                 scriptPackSession.State[RoslynScriptEngine.SessionKey] = session;
@@ -243,10 +259,12 @@ namespace ScriptCs.Tests
                 ScriptPackSession scriptPackSession)
             {
                 const string Code = "\"Hello\" //this should return \"Hello\"";
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
 
                 // Arrange
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(), mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q, mockFileSystem)));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
                 scriptPackSession.State[RoslynScriptEngine.SessionKey] = session;
@@ -268,9 +286,11 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "var theNumber = 42; //this should not return a value";
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
 
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(), mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q,mockFileSystem)));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
                 scriptPackSession.State[RoslynScriptEngine.SessionKey] = session;
@@ -292,9 +312,11 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "class test {";
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
 
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(),mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q, mockFileSystem)));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
                 scriptPackSession.State[RoslynScriptEngine.SessionKey] = session;
@@ -318,9 +340,11 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "var x = new[1] { 1 }; var y = x[0";
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
 
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(), mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q,mockFileSystem)));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
                 scriptPackSession.State[RoslynScriptEngine.SessionKey] = session;
@@ -343,9 +367,11 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "System.Diagnostics.Debug.WriteLine(\"a\"";
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
 
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
-                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q)));
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(),mockFileSystem))
+                    .Returns<IScriptPackManager, string[]>((p, q) => new ScriptHost(p, new ScriptEnvironment(q,mockFileSystem)));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
                 scriptPackSession.State[RoslynScriptEngine.SessionKey] = session;
@@ -369,8 +395,10 @@ namespace ScriptCs.Tests
             {
                 // Arrange
                 const string Code = "var x = new ScriptCs.Tests.TestMarkerClass();";
+                var mockFileSystem = Mock.Of<IFileSystem>();
+                Mock.Get(mockFileSystem).Setup(x => x.CurrentDirectory).Returns(Environment.CurrentDirectory);
 
-                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>()))
+                scriptHostFactory.Setup(f => f.CreateScriptHost(It.IsAny<IScriptPackManager>(), It.IsAny<string[]>(),mockFileSystem))
                     .Returns<IScriptPackManager, ScriptEnvironment>((p, q) => new ScriptHost(p, q));
 
                 var session = new SessionState<Session> { Session = new ScriptEngine().CreateSession() };
@@ -389,8 +417,8 @@ namespace ScriptCs.Tests
 
         public class RoslynTestScriptEngine : RoslynScriptEngine
         {
-            public RoslynTestScriptEngine(IScriptHostFactory scriptHostFactory, ILog logger)
-                : base(scriptHostFactory, logger)
+            public RoslynTestScriptEngine(IScriptHostFactory scriptHostFactory, ILog logger, IFileSystem fileSystem)
+                : base(scriptHostFactory, logger, fileSystem)
             {
             }
 

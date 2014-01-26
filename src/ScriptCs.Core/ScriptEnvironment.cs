@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using ScriptCs.Contracts;
 
 namespace ScriptCs
 {
     public class ScriptEnvironment
     {
-        public ScriptEnvironment(string[] scriptArgs)
+        public ScriptEnvironment(string[] scriptArgs, IFileSystem fileSystem)
         {
             ScriptArgs = scriptArgs;
-            WorkingDirectory = Environment.CurrentDirectory;
+            WorkingDirectory = fileSystem.CurrentDirectory;
         }
 
         public IReadOnlyList<string> ScriptArgs { get; private set; }

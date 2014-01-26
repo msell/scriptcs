@@ -15,14 +15,16 @@ namespace ScriptCs.Engine.Roslyn
     {
         protected readonly ScriptEngine ScriptEngine;
         private readonly IScriptHostFactory _scriptHostFactory;
+        private readonly IFileSystem _fileSystem;
 
         public const string SessionKey = "Session";
 
-        public RoslynScriptEngine(IScriptHostFactory scriptHostFactory, ILog logger)
+        public RoslynScriptEngine(IScriptHostFactory scriptHostFactory, ILog logger, IFileSystem fileSystem)
         {
             ScriptEngine = new ScriptEngine();
             ScriptEngine.AddReference(typeof(ScriptExecutor).Assembly);
             _scriptHostFactory = scriptHostFactory;
+            _fileSystem = fileSystem;
             Logger = logger;
         }
 
@@ -51,7 +53,7 @@ namespace ScriptCs.Engine.Roslyn
 
             if (!scriptPackSession.State.ContainsKey(SessionKey))
             {
-                var host = _scriptHostFactory.CreateScriptHost(new ScriptPackManager(scriptPackSession.Contexts), scriptArgs);
+                var host = _scriptHostFactory.CreateScriptHost(new ScriptPackManager(scriptPackSession.Contexts), scriptArgs, _fileSystem);
                 Logger.Debug("Creating session");
 
                 var hostType = host.GetType();

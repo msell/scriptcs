@@ -2,6 +2,6 @@
 {
     public interface IScriptHostFactory
     {
-        IScriptHost CreateScriptHost(IScriptPackManager scriptPackManager, string[] scriptArgs);
+        IScriptHost CreateScriptHost(IScriptPackManager scriptPackManager, string[] scriptArgs, IFileSystem fileSystem);
     }
 }

@@ -15,7 +15,7 @@ namespace ScriptCs.Engine.Roslyn
         private const string RoslynAssemblyNameCharacter = "ℛ";
 
         public RoslynScriptPersistentEngine(IScriptHostFactory scriptHostFactory, ILog logger, IFileSystem fileSystem)
-            : base(scriptHostFactory, logger)
+            : base(scriptHostFactory, logger, fileSystem)
         {
             _fileSystem = fileSystem;
         }
